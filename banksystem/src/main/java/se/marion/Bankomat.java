@@ -1,33 +1,66 @@
 package se.marion;
 import static com.diogonunes.jcolor.Ansi.*;
 import static com.diogonunes.jcolor.Attribute.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import java.io.BufferedReader;
+// import java.io.BufferedWriter;
+import java.io.FileReader;
+// import java.io.FileWriter;
+import java.io.IOException;
+
+import java.time.LocalDateTime;
+
 
 public class Bankomat {
 
-    Konto konto = new Konto(); 
+    Kund k = new Kund();
+    int kundnummer = 0;
     int choice1;
     int choice2;
     int insats;
     int uttag;
     int kontonummer;
     String password;
-    boolean choice = true;
-    boolean finnsKonto = true;
-    boolean inloggad;
-    boolean validPassword = false;
-    boolean guessPassword = false;
-    boolean choiceInsats = true;
-    boolean choiceUttag = true;
+   
+
+    public void readFile(){
+        String path = "C:/JAVA21/Codes/JavaA/Bankomat/banksystem/src/main/java/se/marion/bankfil.txt";
+        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+            String line;
+             while (( line = br.readLine()) != null) {
+                String[] parts = line.split(";");
+                k.setName(parts[0]);
+                k.setKontoNummer(Integer.parseInt(parts[1]));
+                k.setPassword(parts[2]);
+            }
+        }
+        catch(IOException ex){
+            System.out.println(ex);
+        }
+    }
+    public boolean checkPassword(String password){
+        String path = "C:/JAVA21/Codes/JavaA/Bankomat/banksystem/src/main/java/se/marion/bankfil.txt";
+        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+            String line;
+             while (( line = br.readLine()) != null) {
+                String[] parts = line.split(";");
+                if ((kontonummer == Integer.parseInt(parts[1])) && (password.equals(parts[2])))
+                return true;
+            }
+        }
+        catch(IOException ex){
+            System.out.println(ex);
+        }
+        return false;
+    }
 
 
     public void mainMenu(){
-            while (choice){
+            while (true){
         System.out.println(colorize("***HUVUDMENY***\n",
         YELLOW_TEXT(), 
         BLACK_BACK()));   
-        System.out.println(colorize("(1). Logga in. \n(2.) Skapa nytt konto.",
+        System.out.println(colorize("(1). Logga in. \n(2.) Ny kund.",
         BLUE_TEXT(),
         BLACK_BACK()));
         System.out.println(colorize("(0). Avsluta. \n", 
@@ -37,10 +70,10 @@ public class Bankomat {
         YELLOW_TEXT(),
         BLACK_BACK()));
         
-        try { //kollar om man har matat in en int
+        try { 
              choice1 = Integer.parseInt(System.console().readLine());
         }
-            catch (Exception e){ //kastar en exception om det inte var en int
+            catch (Exception e){ 
                 System.out.println("Ogiltig inmatning. Välj 0, 1 eller 2. Endast siffror tillåtna.");
                 continue;            
             }
@@ -48,13 +81,10 @@ public class Bankomat {
             case (0):
             System.exit(0);
             case(1):
-                finnsKonto = false;
                 login();
-                choice = false;
                 break;
             case(2):
                 newUser();
-                choice = false;
                 break;
             default:
                 System.out.println(colorize("Ogiltig inmatning. ", 
@@ -64,110 +94,90 @@ public class Bankomat {
     }
 }
     public void login(){
-        while (finnsKonto== false){
+        while (true){
         System.out.print(colorize("Skriv in ditt kontonummer: ", 
             BLUE_TEXT(), 
             BLACK_BACK()));    
-            try { //kollar om man har matat in en int
+            try { 
                 kontonummer = Integer.parseInt(System.console().readLine());
            }
-               catch (Exception e){ //kastar en exception om det inte var en int
+               catch (Exception e){ 
                    System.out.println("Ogiltig inmatning. Endast siffror tillåtna.");
                    continue;    
                }                        
         if (kontonummer == 000){
             mainMenu();
+            break;
         }
-        else if (konto.allaKonto.containsKey(kontonummer)){    
+        if (doesKontoExist(kontonummer)){
+            while(true){
                 System.out.println("Enter password");
                 password = System.console().readLine();
-                checkPassword();
-            continue;
-                    }
-        else {
-            System.out.println("Detta kontonummer finns inte. Skriv in ditt kontonummer eller tryck 000 för att gå tillbaka till Huvudmenyn. ");
-            finnsKonto = false;
+                if (checkPassword(password))
+                    break;
+                System.out.println("Wrong password.Try again");
+            }
+            kontoMenu();
+        }
+    }
+        }
     
-    }
-}
-    }
+        public boolean doesKontoExist(int kontonummer){                    
+        String path = "C:/JAVA21/Codes/JavaA/Bankomat/banksystem/src/main/java/se/marion/bankfil.txt";
+        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+            String line;
+            while (( line = br.readLine()) != null) {
+                String[] parts = line.split(";");
+                if(kontonummer != Integer.parseInt(parts[1]))
+                    continue;
+               if (kontonummer == Integer.parseInt(parts[1]))
+                   return true;
+               }
+            }
+            catch(IOException ex){
+            System.out.println(ex);
+            }
+            return false;
+        }
+   
+    
+
+    
     public void newUser(){
-        while (finnsKonto = true){
-        System.out.println(colorize("Skapa nytt konto ",
+        while (true){
+        System.out.println(colorize("Ny kund.",
         BLUE_TEXT(), 
             BLACK_BACK()));  
         System.out.println(colorize( "Välj ett kontonummer",
             YELLOW_TEXT(), 
                 BLACK_BACK()));  
-                try { //kollar om man har matat in en int
+                try { 
                     kontonummer = Integer.parseInt(System.console().readLine());
                }
-                   catch (Exception e){ //kastar en exception om det inte var en int
+                   catch (Exception e){ 
                        System.out.println("Ogiltig inmatning. Välj ett kontonummer. Endast siffror tillåtna.");
                        continue;    
                    }      
-        if (konto.allaKonto.containsKey(kontonummer)){
+        if (doesKontoExist(kontonummer)){
             System.out.println("Detta kontonummer är redan taget. Välj ett annat nummer");
         }
         else {
-            konto.allaKonto.put(kontonummer, 0);
-            finnsKonto = false;
-            createPassword();
+            System.out.println("Skriv in ditt namn");
+            // String name = System.console().readLine();
+            // konto.allaKonto.put(kontonummer, 0);
+            k.setName(System.console().readLine());
+            k.setKontoNummer(kontonummer);
+            k.createPassword();
+            k.setPassword(password);
             mainMenu();
         }
     }
 }
-    public void createPassword(){
-        System.out.println("Please enter a password. \nIt has to be at 8-15 characters and contain both small and big letter, a number, and a special character. ");   
-        while (!validPassword){    
-            password = System.console().readLine();
-        
-            if (password.length() < 8){
-                System.out.println("Invalid password, too short.");
-            }
-            else if (password.length()>15 ){
-                System.out.println("Invalid password, too slong.");
-            }
-            else {
-                Pattern letter = Pattern.compile("[a-zA-z]");
-                Pattern digit = Pattern.compile("[0-9]");
-                Pattern special = Pattern.compile ("[!@#$%&*()_+=|<>?{}\\[\\]~-]");
-
-                Matcher hasLetter = letter.matcher(password);
-                Matcher hasDigit = digit.matcher(password);
-                Matcher hasSpecial = special.matcher(password);
-
-                if (hasLetter.find() && hasDigit.find() && hasSpecial.find()){ 
-                    konto.password.put(kontonummer,password);
-                    validPassword = true;
-                    continue;
-                }
-                else { 
-                    System.out.println("Please enter a valid password. \nIt has to contain a number, an uppercase, a lower case, and a special character.");
-                    continue;
-                }
-            }
-
-    }
-}
-    public void checkPassword(){
-        while (!guessPassword){
-            if (password.equals(konto.password.get(kontonummer))){
-                inloggad = true;
-                guessPassword = true;
-                kontoMenu();
-            }
-            else {
-                System.out.println("Wrong password. Please try again");
-                password = System.console().readLine();
-            }
-        }
-    }
-    public void kontoMenu(){
     
-        while (inloggad){
-            choiceUttag = true;
-            choiceInsats = true;
+
+
+    public void kontoMenu(){    
+        while (true){
             System.out.println(colorize("\nKONTOMENY "+ kontonummer+"\n",
             YELLOW_TEXT(), 
             BLACK_BACK()));  
@@ -183,10 +193,10 @@ public class Bankomat {
             System.out.println(colorize("(5). Avsluta ",
             RED_TEXT(), 
             BLACK_BACK()));  
-            try { //kollar om man har matat in en int
+            try { 
                 choice2 = Integer.parseInt(System.console().readLine());
            }
-               catch (Exception e){ //kastar en exception om det inte var en int
+               catch (Exception e){ 
                    System.out.println("Ogiltig inmatning. Välj mellan 1-5.");
                    continue;    
                }                 
@@ -195,13 +205,19 @@ public class Bankomat {
                     System.out.println(colorize("Hur mycket pengar vill du ta ut? ",
                     BLUE_TEXT(), 
                     BLACK_BACK()));  
-                    while (choiceUttag){
-                    try { //kollar om man har matat in en int
+                    while (true){
+                    try { 
                         uttag = Integer.parseInt(System.console().readLine());
-                        choiceUttag = false;
-                        konto.uttag(uttag, kontonummer);
+                        LocalDateTime  datum = LocalDateTime .now();
+                        Transaktion t = new Transaktion("Uttag",uttag, datum);
+                            k.adjustSaldo(-uttag);
+                            t.addToFile();
+                            t.printLastTransaction();
+                            k.addSaldoToFile();
+                            System.out.println("Your saldo is: "+k.getSaldo());
+                        break;
                    }
-                       catch (Exception e){ //kastar en exception om det inte var en int
+                       catch (Exception e){ 
                            System.out.println("Ogiltig inmatning. Hur mycket pengar vill du ta ut? Endast siffror tillåtna.");
                            continue;    
                        }               
@@ -211,13 +227,19 @@ public class Bankomat {
                     System.out.println(colorize("Hur mycket pengar vill du sätta in? ",
                     BLUE_TEXT(), 
                     BLACK_BACK()));  
-                    while (choiceInsats){
-                    try { //kollar om man har matat in en int
+                    while (true){
+                    try { 
                         insats = Integer.parseInt(System.console().readLine());
-                        choiceInsats = false;
-                        konto.insats(insats, kontonummer);
+                        LocalDateTime  datum = LocalDateTime .now();
+                        Transaktion t = new Transaktion("Insats",insats, datum);
+                        t.addToFile();
+                        k.adjustSaldo(insats);
+                        t.printLastTransaction();
+                        System.out.println("Your saldo is: "+k.getSaldo());
+                        k.addSaldoToFile();
+                        break;
                    }
-                       catch (Exception e){ //kastar en exception om det inte var en int
+                       catch (Exception e){ 
                            System.out.println("Ogiltig inmatning. Hur mycket vill du sätta in? Endast siffror tillåtna.");
                            continue;    
                        } 
@@ -225,14 +247,13 @@ public class Bankomat {
 
                     break;
                 case(3):
-                    System.out.println("Din saldo är: "+ konto.allaKonto.get(kontonummer));
+                    System.out.println("Din saldo är: "+ k.getSaldo());
                     break;
                 case(4):
-                    System.out.println(konto.allaTransaktioner);
+                    k.printTransactions();
                     break;
                 case(5):
-                inloggad = false;
-                mainMenu();
+                    mainMenu();
                     break;
             }
         }
